@@ -16,6 +16,19 @@ dotnet run --launch-profile http
 
 The SQLite file (`app.db`) is created on first run; EF Core migrations are applied at startup, so there is no manual database setup. CORS is open to `http://localhost:5173` for the frontend.
 
+### If `dotnet run` is blocked by an Application Control policy
+
+On Windows machines with Smart App Control or WDAC enabled, `dotnet run` fails with `Win32Exception (4551): An Application Control policy has blocked this file`. The build succeeds; what is blocked is the unsigned `TaskManager.Api.exe` launcher that the SDK generates. Launch the DLL through the (signed) `dotnet` host instead:
+
+```bat
+dotnet build
+set ASPNETCORE_ENVIRONMENT=Development
+set ASPNETCORE_URLS=http://localhost:5171
+dotnet bin\Debug\net8.0\TaskManager.Api.dll
+```
+
+Both `set` lines are required: `launchSettings.json` only applies to `dotnet run`, and without the Development environment there is no JWT key, so the app fails fast at startup by design. (`dotnet run -p:UseAppHost=false` does *not* help - `dotnet run` still launches the `.exe`.)
+
 ## Tests
 
 ```bash
