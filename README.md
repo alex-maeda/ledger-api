@@ -20,6 +20,17 @@ The SQLite file (`app.db`) is created on first run; EF Core migrations are appli
 
 On Windows machines with Smart App Control or WDAC enabled, `dotnet run` fails with `Win32Exception (4551): An Application Control policy has blocked this file`. The build succeeds; what is blocked is the unsigned `TaskManager.Api.exe` launcher that the SDK generates. Launch the DLL through the (signed) `dotnet` host instead:
 
+PowerShell:
+
+```powershell
+dotnet build
+$env:ASPNETCORE_ENVIRONMENT = "Development"
+$env:ASPNETCORE_URLS = "http://localhost:5171"
+dotnet bin\Debug\net8.0\TaskManager.Api.dll
+```
+
+cmd:
+
 ```bat
 dotnet build
 set ASPNETCORE_ENVIRONMENT=Development
@@ -27,7 +38,9 @@ set ASPNETCORE_URLS=http://localhost:5171
 dotnet bin\Debug\net8.0\TaskManager.Api.dll
 ```
 
-Both `set` lines are required: `launchSettings.json` only applies to `dotnet run`, and without the Development environment there is no JWT key, so the app fails fast at startup by design. (`dotnet run -p:UseAppHost=false` does *not* help - `dotnet run` still launches the `.exe`.)
+Use the syntax that matches your shell. `set VAR=value` is cmd-only: in PowerShell it silently sets nothing, so the app starts without the Development environment and stops with `Jwt:Key is not configured`.
+
+Both variables are required. `launchSettings.json` is only read by `dotnet run`, so launching the DLL directly means supplying the environment yourself, and without `Development` there is no JWT key - the app then fails fast at startup by design. (`dotnet run -p:UseAppHost=false` does *not* help: `dotnet run` still launches the `.exe`.)
 
 ## Tests
 
